@@ -23,7 +23,9 @@ fn main() {
             file.read_to_string(&mut input)
                 .expect("Error reading input");
             let result = day1(input);
-            println!("Day 1 result: {}", result);
+            println!("Day 1 result:");
+            println!("Part 1: {}", result.diff_sum);
+            println!("Part 2: {}", result.similarity_score);
         }
         _ => panic!("Unknown or unfinished day {}", cli.day),
     }
