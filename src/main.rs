@@ -35,7 +35,9 @@ fn main() {
             file.read_to_string(&mut input)
                 .expect("Error reading input");
             let result = day2(input);
-            println!("Day 2 result: {}", result);
+            println!("Day 2 result:");
+            println!("Part 1: {}", result.num_safe);
+            println!("Part 2: {}", result.num_safe_with_dampener);
         }
         _ => panic!("Unknown or unfinished day {}", cli.day),
     }
