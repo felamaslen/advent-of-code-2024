@@ -2,6 +2,7 @@ use std::char;
 
 pub struct Day4 {
     pub part1: usize,
+    pub part2: usize,
 }
 
 const WORD: &str = "XMAS";
@@ -117,10 +118,96 @@ fn word_search(input: String) -> usize {
         .fold(0, |acc, (_, _, count)| acc + count)
 }
 
+fn xmas(input: String) -> usize {
+    let line_len = input.lines().next().unwrap().len();
+    let num_lines = input.lines().count();
+
+    input
+        .lines()
+        .enumerate()
+        .filter(|(i, _)| *i > 0 && *i < num_lines - 1)
+        .fold(0, |acc, (i, line)| {
+            acc + line
+                .chars()
+                .enumerate()
+                .filter(|(j, ch)| {
+                    *ch == 'A'
+                        && *j > 0
+                        && *j < line_len - 1
+                        && ((input
+                            .lines()
+                            .nth(i - 1)
+                            .unwrap()
+                            .chars()
+                            .nth(j - 1)
+                            .unwrap()
+                            == 'M'
+                            && input
+                                .lines()
+                                .nth(i + 1)
+                                .unwrap()
+                                .chars()
+                                .nth(j + 1)
+                                .unwrap()
+                                == 'S')
+                            || (input
+                                .lines()
+                                .nth(i - 1)
+                                .unwrap()
+                                .chars()
+                                .nth(j - 1)
+                                .unwrap()
+                                == 'S'
+                                && input
+                                    .lines()
+                                    .nth(i + 1)
+                                    .unwrap()
+                                    .chars()
+                                    .nth(j + 1)
+                                    .unwrap()
+                                    == 'M'))
+                        && ((input
+                            .lines()
+                            .nth(i - 1)
+                            .unwrap()
+                            .chars()
+                            .nth(j + 1)
+                            .unwrap()
+                            == 'M'
+                            && input
+                                .lines()
+                                .nth(i + 1)
+                                .unwrap()
+                                .chars()
+                                .nth(j - 1)
+                                .unwrap()
+                                == 'S')
+                            || (input
+                                .lines()
+                                .nth(i - 1)
+                                .unwrap()
+                                .chars()
+                                .nth(j + 1)
+                                .unwrap()
+                                == 'S'
+                                && input
+                                    .lines()
+                                    .nth(i + 1)
+                                    .unwrap()
+                                    .chars()
+                                    .nth(j - 1)
+                                    .unwrap()
+                                    == 'M'))
+                })
+                .count()
+        })
+}
+
 pub fn day4(input: String) -> Day4 {
     let part1 = word_search(input.to_owned());
+    let part2 = xmas(input.to_owned());
 
-    Day4 { part1 }
+    Day4 { part1, part2 }
 }
 
 #[cfg(test)]
@@ -143,5 +230,23 @@ MXMXAXMASX";
         let result = day4(input.to_owned());
 
         assert_eq!(result.part1, 18);
+    }
+
+    #[test]
+    fn gets_part2() {
+        let input = r"MMMSXXMASM
+MSAMXMSMSA
+AMXSXMAAMM
+MSAMASMSMX
+XMASAMXAMM
+XXAMMXXAMA
+SMSMSASXSS
+SAXAMASAAA
+MAMMMXMMMM
+MXMXAXMASX";
+
+        let result = day4(input.to_owned());
+
+        assert_eq!(result.part2, 9);
     }
 }

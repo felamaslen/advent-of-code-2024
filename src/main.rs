@@ -61,6 +61,7 @@ fn main() {
             let result = day4(input);
             println!("Day 4 result:");
             println!("Part 1: {}", result.part1);
+            println!("Part 2: {}", result.part2);
         }
         _ => panic!("Unknown or unfinished day {}", cli.day),
     }
