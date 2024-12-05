@@ -6,11 +6,13 @@ use day1::day1;
 use day2::day2;
 use day3::day3;
 use day4::day4;
+use day5::day5;
 
 mod day1;
 mod day2;
 mod day3;
 mod day4;
+mod day5;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -18,7 +20,6 @@ struct Cli {
     #[arg(long)]
     day: i16,
 }
-
 fn main() {
     let cli = Cli::parse();
 
@@ -62,6 +63,15 @@ fn main() {
             println!("Day 4 result:");
             println!("Part 1: {}", result.part1);
             println!("Part 2: {}", result.part2);
+        }
+        5 => {
+            let mut input = String::new();
+            let mut file = File::open("src/day5_input.txt").expect("Error opening input");
+            file.read_to_string(&mut input)
+                .expect("Error reading input");
+            let result = day5(input);
+            println!("Day 5 result:");
+            println!("Part 1: {}", result.part1);
         }
         _ => panic!("Unknown or unfinished day {}", cli.day),
     }
