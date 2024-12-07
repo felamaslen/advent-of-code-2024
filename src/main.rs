@@ -8,6 +8,7 @@ use day3::day3;
 use day4::day4;
 use day5::day5;
 use day6::day6;
+use day7::day7;
 
 mod day1;
 mod day2;
@@ -15,6 +16,7 @@ mod day3;
 mod day4;
 mod day5;
 mod day6;
+mod day7;
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -85,6 +87,15 @@ fn main() {
             println!("Day 6 result:");
             println!("Part 1: {}", result.part1);
             println!("Part 2: {}", result.part2);
+        }
+        7 => {
+            let mut input = String::new();
+            let mut file = File::open("src/day7_input.txt").expect("Error opening input");
+            file.read_to_string(&mut input)
+                .expect("Error reading input");
+            let result = day7(input);
+            println!("Day 7 result:");
+            println!("Part 1: {}", result.part1);
         }
         _ => panic!("Unknown or unfinished day {}", cli.day),
     }
