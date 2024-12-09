@@ -120,6 +120,7 @@ fn main() {
             let result = day9(input);
             println!("Day 9 result:");
             println!("Part 1: {}", result.part1);
+            println!("Part 2: {}", result.part2);
         }
         _ => panic!("Unknown or unfinished day {}", cli.day),
     }
