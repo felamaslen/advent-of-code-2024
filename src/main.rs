@@ -4,6 +4,7 @@ use std::io::prelude::*;
 
 use day1::day1;
 use day10::day10;
+use day11::day11;
 use day2::day2;
 use day3::day3;
 use day4::day4;
@@ -15,6 +16,7 @@ use day9::day9;
 
 mod day1;
 mod day10;
+mod day11;
 mod day2;
 mod day3;
 mod day4;
@@ -133,6 +135,15 @@ fn main() {
             println!("Day 10 result:");
             println!("Part 1: {}", result.part1);
             println!("Part 2: {}", result.part2);
+        }
+        11 => {
+            let mut input = String::new();
+            let mut file = File::open("src/day11_input.txt").expect("Error opening input");
+            file.read_to_string(&mut input)
+                .expect("Error reading input");
+            let result = day11(input);
+            println!("Day 11 result:");
+            println!("Part 1: {}", result.part1);
         }
         _ => panic!("Unknown or unfinished day {}", cli.day),
     }
