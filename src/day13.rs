@@ -66,10 +66,75 @@ fn part1(input: String) -> usize {
         })
 }
 
+fn part2(input: String) -> usize {
+    let (mut machines, last_machine) = input.lines().fold(
+        (vec![], ((0.0, 0.0), (0.0, 0.0), (0.0, 0.0))),
+        |(mut machines, machine), line| {
+            let get_button = || {
+                let (x_diff, y_diff) = line.split_once(": ").unwrap().1.split_once(", ").unwrap();
+                let x_diff_n = str::parse::<f64>(x_diff.split_once('+').unwrap().1).unwrap();
+                let y_diff_n = str::parse::<f64>(y_diff.split_once('+').unwrap().1).unwrap();
+                (x_diff_n, y_diff_n)
+            };
+
+            if line.starts_with("Button A") {
+                let button_a = get_button();
+                (machines, (button_a, (0.0, 0.0), (0.0, 0.0)))
+            } else if line.starts_with("Button B") {
+                let button_b = get_button();
+                (machines, (machine.0, button_b, (0.0, 0.0)))
+            } else if line.starts_with("Prize") {
+                let (x, y) = line.split_once(": ").unwrap().1.split_once(", ").unwrap();
+                let x_n =
+                    str::parse::<f64>(x.split_once("=").unwrap().1).unwrap() + 10000000000000.0;
+                let y_n =
+                    str::parse::<f64>(y.split_once("=").unwrap().1).unwrap() + 10000000000000.0;
+
+                (machines, (machine.0, machine.1, (x_n, y_n)))
+            } else {
+                machines.push(machine);
+                (machines, ((0.0, 0.0), (0.0, 0.0), (0.0, 0.0)))
+            }
+        },
+    );
+
+    if last_machine.0 .0 > 0.0 {
+        machines.push(last_machine);
+    }
+
+    machines
+        .iter()
+        .fold(0, |score, ((ax, ay), (bx, by), (px, py))| {
+            // (ax bx)(Na) = (px)
+            // (ay by)(Nb)   (py)
+            //
+            // =>
+            //
+            // (Na) =       1       (by  -bx)(px)
+            // (Nb)   |ax*by-bx*ay| (-ay  ax)(py)
+            //
+            // =>
+            //
+            // Na = (by*px - bx*py) / (ax*by - bx*ay)
+            // Nb = (ax*py - ay*px) / (ax*by - bx*ay)
+
+            let na = (by * px - bx * py) / (ax * by - bx * ay);
+            let nb = (ax * py - ay * px) / (ax * by - bx * ay);
+
+            if na < 0.0 || nb < 0.0 || na.fract() != 0.0 || nb.fract() != 0.0 {
+                return score;
+            }
+
+            let cost = 3 * (na as usize) + (nb as usize);
+
+            score + cost
+        })
+}
+
 pub fn day13(input: String) -> Day13 {
     Day13 {
         part1: part1(input.clone()),
-        part2: 0,
+        part2: part2(input.clone()),
     }
 }
 
