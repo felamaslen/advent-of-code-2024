@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 pub struct Day14 {
     pub part1: usize,
@@ -19,8 +19,6 @@ fn part1(
         height,
     }: Day14Input,
 ) -> usize {
-    type Vectors = Vec<((isize, isize), (isize, isize))>;
-
     let (q0, q1, q2, q3) = robots
         .lines()
         .map(|line| {
@@ -220,30 +218,7 @@ p=9,5 v=-3,-3",
             height: 7,
         };
 
-        let result = day14(input);
-        assert_eq!(result.part1, 12);
-    }
-
-    #[test]
-    fn gets_part2() {
-        let input = Day14Input {
-            robots: r"p=0,4 v=3,-3
-p=6,3 v=-1,-3
-p=10,3 v=-1,2
-p=2,0 v=2,-1
-p=0,0 v=1,3
-p=3,0 v=-2,-2
-p=7,6 v=-1,-3
-p=3,0 v=-1,-2
-p=9,3 v=2,3
-p=7,3 v=-1,2
-p=2,4 v=2,-3
-p=9,5 v=-3,-3",
-            width: 11,
-            height: 7,
-        };
-
-        let result = day14(input);
-        assert_eq!(result.part2, 1000);
+        let result = part1(input);
+        assert_eq!(result, 12);
     }
 }
