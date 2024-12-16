@@ -193,9 +193,10 @@ fn main() {
             let mut file = File::open("src/day15_input.txt").expect("Error opening input");
             file.read_to_string(&mut input)
                 .expect("Error reading input");
-            let result = day15(input);
+            let result = day15(input.to_owned());
             println!("Day 15 result:");
             println!("Part 1: {}", result.part1);
+            println!("Part 2: {}", result.part2);
         }
         _ => panic!("Unknown or unfinished day {}", cli.day),
     }
