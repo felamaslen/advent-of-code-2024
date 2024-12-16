@@ -3,6 +3,7 @@ use std::collections::{HashMap, HashSet};
 
 pub struct Day16 {
     pub part1: usize,
+    pub part2: usize,
 }
 
 const EAST: i8 = 0;
@@ -158,7 +159,8 @@ struct StackElem {
     tail: HashSet<(usize, usize)>,
 }
 
-fn solve(board: &mut Board) -> usize {
+fn part1(input: String) -> usize {
+    let board = parse_board(input);
     let mut solutions = vec![];
 
     let mut stack = vec![StackElem {
@@ -189,7 +191,7 @@ fn solve(board: &mut Board) -> usize {
             }
         };
 
-        let linear = match get_next_position(board, next.position) {
+        let linear = match get_next_position(&board, next.position) {
             Some((pos, EMPTY)) => filter_loops(pos),
             _ => None,
         };
@@ -204,7 +206,7 @@ fn solve(board: &mut Board) -> usize {
                 )
             })
             .filter(|pos| {
-                match get_next_position(board, *pos) {
+                match get_next_position(&board, *pos) {
                     Some((pos, EMPTY)) => filter_loops(pos),
                     _ => None,
                 }
@@ -239,14 +241,102 @@ fn solve(board: &mut Board) -> usize {
     *solutions.first().unwrap()
 }
 
-fn part1(input: String) -> usize {
-    let mut board = parse_board(input);
-    solve(&mut board)
+fn part2(input: String) -> usize {
+    let board = parse_board(input);
+    let mut solutions = vec![];
+
+    let mut stack = vec![StackElem {
+        position: board.position,
+        score: 0,
+        tail: HashSet::from([(board.position.0, board.position.1)]),
+    }];
+    let mut min_score_to: HashMap<Position, usize> = HashMap::new();
+
+    while stack.len() != 0 {
+        let next = stack.pop().unwrap();
+
+        if let Some(min_score) = min_score_to.get_mut(&next.position) {
+            if *min_score >= next.score {
+                *min_score = next.score;
+            } else {
+                continue;
+            }
+        } else {
+            min_score_to.insert(next.position, next.score);
+        }
+
+        let filter_loops = |pos: Position| -> Option<Position> {
+            if next.tail.contains(&(pos.0, pos.1)) {
+                None
+            } else {
+                Some(pos)
+            }
+        };
+
+        let linear = match get_next_position(&board, next.position) {
+            Some((pos, EMPTY)) => filter_loops(pos),
+            _ => None,
+        };
+
+        let rotate = vec![-1, 1]
+            .into_iter()
+            .map(|r| {
+                Position(
+                    next.position.0,
+                    next.position.1,
+                    (next.position.2 + r + 4).rem_euclid(4),
+                )
+            })
+            .filter(|pos| {
+                match get_next_position(&board, *pos) {
+                    Some((pos, EMPTY)) => filter_loops(pos),
+                    _ => None,
+                }
+                .is_some()
+            })
+            .collect::<Vec<Position>>();
+
+        if linear.is_some_and(|Position(x, y, _)| x == board.goal.0 && y == board.goal.1) {
+            solutions.push((next.score + 1, next.tail));
+        } else {
+            if let Some(pos) = linear {
+                let mut tail_next = next.tail.clone();
+                tail_next.insert((pos.0, pos.1));
+                stack.push(StackElem {
+                    position: pos,
+                    score: next.score + 1,
+                    tail: tail_next,
+                });
+            }
+
+            rotate.iter().for_each(|pos| {
+                stack.push(StackElem {
+                    position: *pos,
+                    score: next.score + 1000,
+                    tail: next.tail.clone(),
+                });
+            });
+        }
+    }
+
+    solutions.sort_by(|a, b| a.0.cmp(&b.0));
+    let best_path_length = solutions[0].0;
+    solutions
+        .iter()
+        .take_while(|(l, _)| *l == best_path_length)
+        .fold(HashSet::from([board.goal]), |mut prev, (_, tail)| {
+            tail.iter().for_each(|p| {
+                prev.insert(*p);
+            });
+            prev
+        })
+        .len()
 }
 
 pub fn day16(input: String) -> Day16 {
     Day16 {
         part1: part1(input.clone()),
+        part2: part2(input.clone()),
     }
 }
 
@@ -273,5 +363,26 @@ mod tests {
 ###############";
         let result = day16(input.to_owned());
         assert_eq!(result.part1, 7036);
+    }
+
+    #[test]
+    fn gets_part2() {
+        let input = r"###############
+#.......#....E#
+#.#.###.#.###.#
+#.....#.#...#.#
+#.###.#####.#.#
+#.#.#.......#.#
+#.#.#####.###.#
+#...........#.#
+###.#.#####.#.#
+#...#.....#.#.#
+#.#.#.###.#.#.#
+#.....#...#.#.#
+#.###.#.#.#.#.#
+#S..#.....#...#
+###############";
+        let result = day16(input.to_owned());
+        assert_eq!(result.part2, 45);
     }
 }

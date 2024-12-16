@@ -208,6 +208,7 @@ fn main() {
             let result = day16(input.to_owned());
             println!("Day 16 result:");
             println!("Part 1: {}", result.part1);
+            println!("Part 2: {}", result.part2);
         }
         _ => panic!("Unknown or unfinished day {}", cli.day),
     }
