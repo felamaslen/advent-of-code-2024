@@ -10,6 +10,7 @@ use day13::day13;
 use day14::{day14, Day14Input};
 use day15::day15;
 use day16::day16;
+use day17::day17;
 use day2::day2;
 use day3::day3;
 use day4::day4;
@@ -27,6 +28,7 @@ mod day13;
 mod day14;
 mod day15;
 mod day16;
+mod day17;
 mod day2;
 mod day3;
 mod day4;
@@ -209,6 +211,15 @@ fn main() {
             println!("Day 16 result:");
             println!("Part 1: {}", result.part1);
             println!("Part 2: {}", result.part2);
+        }
+        17 => {
+            let mut input = String::new();
+            let mut file = File::open("src/day17_input.txt").expect("Error opening input");
+            file.read_to_string(&mut input)
+                .expect("Error reading input");
+            let result = day17(input.to_owned());
+            println!("Day 17 result:");
+            println!("Part 1: {}", result.part1);
         }
         _ => panic!("Unknown or unfinished day {}", cli.day),
     }
