@@ -1,16 +1,12 @@
 pub struct Day17 {
     pub part1: String,
+    pub part2: usize,
 }
 
 #[derive(Clone, Debug)]
-struct Computer {
-    reg_a: usize,
-    reg_b: usize,
-    reg_c: usize,
-    program: Vec<u8>,
-}
+struct Computer(usize, usize, usize);
 
-fn parse_input(input: String) -> Computer {
+fn parse_input(input: String) -> (Computer, Vec<u8>) {
     let reg_a = str::parse::<usize>(
         input
             .lines()
@@ -57,12 +53,8 @@ fn parse_input(input: String) -> Computer {
         .map(|ch| str::parse::<u8>(ch).unwrap())
         .collect::<Vec<u8>>();
 
-    Computer {
-        reg_a,
-        reg_b,
-        reg_c,
-        program,
-    }
+    let computer = Computer(reg_a, reg_b, reg_c);
+    (computer, program)
 }
 
 const OP_ADV: u8 = 0;
@@ -80,76 +72,132 @@ fn operand_combo(computer: &Computer, operand: u8) -> usize {
         1 => 1,
         2 => 2,
         3 => 3,
-        4 => computer.reg_a,
-        5 => computer.reg_b,
-        6 => computer.reg_c,
+        4 => computer.0,
+        5 => computer.1,
+        6 => computer.2,
         7 => panic!("Invalid program: 7 is a reserved combo operator"),
         _ => panic!("Operand out of range"),
     }
 }
 
-fn part1(input: String) -> String {
-    let mut computer = parse_input(input);
-    let mut i: usize = 0;
+fn run_step(computer: &mut Computer, program: &Vec<u8>, i: usize) -> (usize, Option<usize>) {
+    let opcode = program[i];
+    let operand = program[i + 1];
 
+    let combo = operand_combo(&computer, operand);
+
+    match opcode {
+        OP_ADV => {
+            let numerator = computer.0;
+            let denominator = 2_u32.pow(combo as u32) as usize;
+            computer.0 = numerator / denominator;
+            (i + 2, None)
+        }
+        OP_BXL => {
+            computer.1 = computer.1 ^ (operand as usize);
+            (i + 2, None)
+        }
+        OP_BST => {
+            computer.1 = combo.rem_euclid(8);
+            (i + 2, None)
+        }
+        OP_JNZ => {
+            if computer.0 != 0 {
+                (operand as usize, None)
+            } else {
+                (i + 2, None)
+            }
+        }
+        OP_BXC => {
+            computer.1 = computer.1 ^ computer.2;
+            (i + 2, None)
+        }
+        OP_OUT => (i + 2, Some(combo.rem_euclid(8))),
+        OP_BDV => {
+            let numerator = computer.0;
+            let denominator = 2_u32.pow(combo as u32) as usize;
+            computer.1 = numerator / denominator;
+            (i + 2, None)
+        }
+        OP_CDV => {
+            let numerator = computer.0;
+            let denominator = 2_u32.pow(combo as u32) as usize;
+            computer.2 = numerator / denominator;
+            (i + 2, None)
+        }
+        _ => panic!("invalid opcode {}", opcode),
+    }
+}
+
+fn run_program(computer: &mut Computer, program: &Vec<u8>) -> Vec<usize> {
+    let mut i: usize = 0;
     let mut output = vec![];
 
-    while i < computer.program.len() - 1 {
-        let opcode = computer.program[i];
-        let operand = computer.program[i + 1];
-
-        let combo = operand_combo(&computer, operand);
-
-        let mut jumped = false;
-
-        match opcode {
-            OP_ADV => {
-                let numerator = computer.reg_a;
-                let denominator = 2_u32.pow(combo as u32) as usize;
-                computer.reg_a = numerator / denominator;
-            }
-            OP_BXL => {
-                computer.reg_b = computer.reg_b ^ (operand as usize);
-            }
-            OP_BST => {
-                computer.reg_b = combo.rem_euclid(8);
-            }
-            OP_JNZ => {
-                if computer.reg_a != 0 {
-                    i = operand as usize;
-                    jumped = true;
-                }
-            }
-            OP_BXC => {
-                computer.reg_b = computer.reg_b ^ computer.reg_c;
-            }
-            OP_OUT => {
-                output.push(format!("{}", combo.rem_euclid(8)));
-            }
-            OP_BDV => {
-                let numerator = computer.reg_a;
-                let denominator = 2_u32.pow(combo as u32) as usize;
-                computer.reg_b = numerator / denominator;
-            }
-            OP_CDV => {
-                let numerator = computer.reg_a;
-                let denominator = 2_u32.pow(combo as u32) as usize;
-                computer.reg_c = numerator / denominator;
-            }
-            _ => panic!("invalid opcode {}", opcode),
-        }
-
-        if !jumped {
-            i += 2;
+    while i < program.len() - 1 {
+        let (i_next, out) = run_step(computer, program, i);
+        i = i_next;
+        if let Some(o) = out {
+            output.push(o);
         }
     }
 
-    output.join(",")
+    output
+}
+
+fn part1(input: String) -> String {
+    let (mut computer, program) = parse_input(input);
+    run_program(&mut computer, &program)
+        .iter()
+        .map(|o| format!("{}", o))
+        .collect::<Vec<String>>()
+        .join(",")
+}
+
+fn part2(input: String) -> usize {
+    let (computer, program) = parse_input(input);
+    let prog_len = program.len();
+
+    let mut stack = vec![(0, prog_len - 1)];
+
+    let mut solution = None;
+
+    while stack.len() != 0 {
+        let (reg_a_init, i) = stack.pop().unwrap();
+        for j in 0..8 {
+            let reg_a = reg_a_init + j;
+            let mut computer_mod = computer.clone();
+            computer_mod.0 = reg_a;
+            let output = run_program(&mut computer_mod, &program);
+            let matches = (i..prog_len)
+                .into_iter()
+                .all(|k| output[k - i] == program[k] as usize);
+
+            if matches {
+                if i == 0 {
+                    solution = match solution {
+                        Some(s) => {
+                            if s < reg_a {
+                                Some(s)
+                            } else {
+                                Some(reg_a)
+                            }
+                        }
+                        None => Some(reg_a),
+                    };
+                } else {
+                    stack.push((reg_a * 8, i - 1));
+                }
+            }
+        }
+    }
+
+    solution.expect("Did not find solution")
 }
 
 pub fn day17(input: String) -> Day17 {
     Day17 {
         part1: part1(input.clone()),
+        part2: part2(input.clone()),
     }
 }
 
@@ -164,7 +212,18 @@ Register B: 0
 Register C: 0
 
 Program: 0,1,5,4,3,0";
-        let result = day17(input.to_owned());
-        assert_eq!(result.part1, "4,6,3,5,6,3,5,2,1,0");
+        let result = part1(input.to_owned());
+        assert_eq!(result, "4,6,3,5,6,3,5,2,1,0");
+    }
+
+    #[test]
+    fn gets_part2() {
+        let input = r"Register A: 2024
+Register B: 0
+Register C: 0
+
+Program: 0,3,5,4,3,0";
+        let result = part2(input.to_owned());
+        assert_eq!(result, 117440);
     }
 }
