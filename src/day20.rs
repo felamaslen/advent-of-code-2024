@@ -1,5 +1,8 @@
+use std::collections::HashMap;
+
 pub struct Day20 {
     pub part1: usize,
+    pub part2: usize,
 }
 
 #[derive(Clone, Debug)]
@@ -24,7 +27,7 @@ fn options_from_cell(width: usize, height: usize, i: usize) -> Vec<usize> {
             None
         },
         // south
-        if i < (width * height - 1) {
+        if i < (width * (height - 1)) {
             Some(i + width)
         } else {
             None
@@ -42,12 +45,7 @@ fn options_from_cell(width: usize, height: usize, i: usize) -> Vec<usize> {
     .collect::<Vec<usize>>()
 }
 
-fn part1(
-    Day20Input {
-        maze,
-        cheat_threshold,
-    }: Day20Input,
-) -> usize {
+fn parse_maze(maze: String) -> (usize, usize, Vec<i8>, Vec<usize>) {
     let width = maze.lines().next().unwrap().len();
     let height = maze.lines().count();
 
@@ -71,12 +69,6 @@ fn part1(
         .enumerate()
         .find(|(_, cell)| **cell == START)
         .expect("Could not find start")
-        .0;
-    let end = cells
-        .iter()
-        .enumerate()
-        .find(|(_, cell)| **cell == END)
-        .expect("Could not find end")
         .0;
 
     let track_crawled = false;
@@ -103,6 +95,17 @@ fn part1(
             }
         }
     }
+
+    (width, height, cells, track)
+}
+
+fn part1(
+    Day20Input {
+        maze,
+        cheat_threshold,
+    }: Day20Input,
+) -> usize {
+    let (width, height, cells, track) = parse_maze(maze);
 
     let length_base = track.len() - 1;
 
@@ -136,9 +139,52 @@ fn part1(
     num_cheats
 }
 
+const MAX_CHEAT: usize = 20;
+
+fn part2(
+    Day20Input {
+        maze,
+        cheat_threshold,
+    }: Day20Input,
+) -> usize {
+    let (width, _height, _cells, track) = parse_maze(maze);
+
+    let length_base = track.len() - 1;
+
+    let mut cheat_count = HashMap::new();
+    let mut c = 0;
+    while c < length_base - 1 - cheat_threshold {
+        let track_rest = &track[c + cheat_threshold..];
+
+        let x0 = track[c].rem_euclid(width);
+        let y0 = track[c] / width;
+
+        track_rest.iter().enumerate().for_each(|(d, dest)| {
+            print!("\rc={}, d={}", c, d);
+            let x1 = dest.rem_euclid(width);
+            let y1 = dest / width;
+            let manhattan_distance = x1.abs_diff(x0) + y1.abs_diff(y0);
+
+            if manhattan_distance <= MAX_CHEAT && manhattan_distance <= d {
+                let saved = cheat_threshold + d - manhattan_distance;
+                if let Some(count) = cheat_count.get_mut(&saved) {
+                    *count += 1;
+                } else {
+                    cheat_count.insert(saved, 1);
+                }
+            }
+        });
+
+        c += 1;
+    }
+
+    cheat_count.iter().fold(0, |sum, (_, count)| sum + count)
+}
+
 pub fn day20(input: Day20Input) -> Day20 {
     Day20 {
         part1: part1(input.clone()),
+        part2: part2(input.clone()),
     }
 }
 
@@ -246,6 +292,46 @@ mod tests {
                 cheat_threshold: 11
             }),
             8
+        );
+    }
+
+    #[test]
+    fn gets_part2() {
+        let input = r"###############
+#...#...#.....#
+#.#.#.#.#.###.#
+#S#...#.#.#...#
+#######.#.#.###
+#######.#.#...#
+#######.#.###.#
+###..E#...#...#
+###.#######.###
+#...###...#...#
+#.#####.#.###.#
+#.#...#.#.#...#
+#.#.#.#.#.#.###
+#...#...#...###
+###############";
+        assert_eq!(
+            part2(Day20Input {
+                maze: input.to_owned(),
+                cheat_threshold: 50
+            }),
+            32 + 31 + 29 + 39 + 25 + 23 + 20 + 19 + 12 + 14 + 12 + 22 + 4 + 3
+        );
+        assert_eq!(
+            part2(Day20Input {
+                maze: input.to_owned(),
+                cheat_threshold: 52
+            }),
+            31 + 29 + 39 + 25 + 23 + 20 + 19 + 12 + 14 + 12 + 22 + 4 + 3
+        );
+        assert_eq!(
+            part2(Day20Input {
+                maze: input.to_owned(),
+                cheat_threshold: 54
+            }),
+            29 + 39 + 25 + 23 + 20 + 19 + 12 + 14 + 12 + 22 + 4 + 3
         );
     }
 }
